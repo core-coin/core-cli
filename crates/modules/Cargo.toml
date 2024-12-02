@@ -1,0 +1,18 @@
+[package]
+authors = { workspace = true }
+description = "List of modules and comamands used in Core-CLI"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = ["core blockchain", "xcb", "cli", "modules"]
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+name = "modules"
+publish = true
+
+[dependencies]
+rpc.workspace = true
+cli-error.workspace = true
+tokio.workspace = true
+async-trait.workspace = true
+types.workspace = true

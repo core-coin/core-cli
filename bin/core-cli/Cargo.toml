@@ -1,0 +1,24 @@
+[package]
+authors = { workspace = true }
+description = "Core Blockchain CLI binary."
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = ["core blockchain", "xcb", "cli"]
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+name = "core-cli-bin"
+publish = true
+
+[[bin]]
+name = "core-cli"
+path = "src/main.rs"
+
+[dependencies]
+rpc.workspace = true
+cli.workspace = true
+cli-error.workspace = true
+structopt.workspace = true
+console.workspace = true
+tokio.workspace = true
+tracing-subscriber.workspace = true

@@ -1,0 +1,16 @@
+[package]
+authors = { workspace = true }
+description = "Structs and types used in Core-CLI"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = ["core blockchain", "xcb", "cli", "types"]
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+name = "types"
+publish = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+atoms-rpc-types.workspace = true

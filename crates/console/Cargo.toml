@@ -1,0 +1,20 @@
+[package]
+authors = { workspace = true }
+description = "Console used in Core CLI"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = ["core blockchain", "xcb", "cli", "console"]
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+name = "console"
+publish = true
+
+[dependencies]
+cli-error.workspace = true
+rpc.workspace = true
+tokio.workspace = true
+modules.workspace = true
+rustyline.workspace = true
+types.workspace = true
+tracing.workspace = true

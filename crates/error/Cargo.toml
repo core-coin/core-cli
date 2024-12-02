@@ -1,0 +1,14 @@
+[package]
+authors = { workspace = true }
+description = "Errors used in Core-CLI"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = ["core blockchain", "xcb", "cli", "error"]
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+name = "cli-error"
+publish = true
+
+[dependencies]
+thiserror.workspace = true

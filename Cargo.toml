@@ -1,0 +1,57 @@
+[workspace]
+members = [
+    "bin/core-cli",
+    "crates/cli",
+    "crates/modules",
+    "crates/error",
+    "crates/console",
+    "crates/rpc",
+    "crates/types"
+]
+
+resolver = "2"
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+panic = "unwind"
+
+[workspace.package]
+authors = ["Core Blockchain Authors"]
+edition = "2021"
+keywords = ["core blockchain", "xcb", "cli"]
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/core-coin/core-cli"
+repository = "https://github.com/core-coin/core-cli"
+version = "0.0.1"
+
+[workspace.dependencies]
+# Workspace members
+core-cli-bin = { path = "./bin/core-cli" }
+cli = { path = "./crates/cli" }
+modules = { path = "./crates/modules" }
+cli-error = { path = "./crates/error" }
+console = { path = "./crates/console" }
+rpc = { path = "./crates/rpc" }
+types = {path = "./crates/types" }
+
+# External dependencies
+structopt = "0.3"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+async-trait = "0.1"
+rustyline = { version = "15.0.0", features= ["with-file-history"]}  
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Core libraries
+base-primitives = {  git = "https://github.com/core-coin/base-rs.git",default-features = false}
+atoms-provider = {git = "https://github.com/core-coin/atoms-rs.git", features = ["reqwest"]}
+atoms-rpc-client = {git = "https://github.com/core-coin/atoms-rs.git", features = ["reqwest"]}
+atoms-json-rpc = {git = "https://github.com/core-coin/atoms-rs.git"}
+atoms-transport = {git = "https://github.com/core-coin/atoms-rs.git"}
+atoms-transport-http = {git = "https://github.com/core-coin/atoms-rs.git"}
+atoms-rpc-types = {git = "https://github.com/core-coin/atoms-rs.git"}

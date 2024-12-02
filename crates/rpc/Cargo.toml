@@ -1,0 +1,25 @@
+[package]
+authors = { workspace = true }
+description = "RPC clients of Core-CLI"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = ["core blockchain", "xcb", "cli", "rpc"]
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+name = "rpc"
+publish = true
+
+[dependencies]
+async-trait.workspace = true
+cli-error.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+
+atoms-provider = {workspace = true, features = ["reqwest"]}
+atoms-rpc-client = {workspace = true, features = ["reqwest"]}
+atoms-json-rpc = {workspace = true}
+atoms-transport = {workspace = true}
+atoms-rpc-types.workspace = true
+atoms-transport-http.workspace = true
+base-primitives.workspace = true

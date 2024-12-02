@@ -1,0 +1,14 @@
+[package]
+authors = { workspace = true }
+description = "Command Line Interface used in Core-CLI"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = ["core blockchain", "xcb", "cli", "cli"]
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+name = "cli"
+publish = true
+
+[dependencies]
+structopt.workspace = true

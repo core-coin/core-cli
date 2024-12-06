@@ -16,3 +16,12 @@ cli-error.workspace = true
 tokio.workspace = true
 async-trait.workspace = true
 types.workspace = true
+rand.workspace = true
+rand_core.workspace = true
+hex.workspace = true
+rpassword = "5.0"
+serde_json.workspace = true
+chrono.workspace = true
+
+atoms-signer-wallet.workspace = true
+xcb-keystore.workspace = true

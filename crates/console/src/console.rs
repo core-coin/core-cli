@@ -8,7 +8,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{debug, info};
-use types::{Response, ResponseView};
+use types::account::Accounts;
+use types::{Account, Response, ResponseView};
 
 use crate::base::{base_functions, BaseFunctions};
 
@@ -16,22 +17,27 @@ pub struct Console {
     modules: HashMap<String, Box<dyn Module>>,
     base_functions: BaseFunctions,
     client: Arc<Mutex<dyn RpcClient + Send>>,
+    datadir: String,
+    accounts: Accounts,
 }
 
 impl Console {
-    pub fn new(client: Arc<Mutex<dyn RpcClient + Send>>) -> Self {
+    pub async fn new(client: Arc<Mutex<dyn RpcClient + Send>>, datadir: String) -> Self {
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
+        let accounts = Accounts::new(vec![]);
 
         modules.insert("xcb".to_string(), Box::new(XcbModule::new(client.clone())));
         modules.insert(
             "xcbkey".to_string(),
-            Box::new(XcbKeyModule::new(client.clone())),
+            Box::new(XcbKeyModule::new(client.clone(), datadir.clone(), accounts.clone()).await),
         );
 
         Console {
             modules,
             client,
             base_functions: base_functions(),
+            datadir,
+            accounts,
         }
     }
 
@@ -42,6 +48,11 @@ impl Console {
         }
 
         info!("Welcome to the Core Blockchain Console");
+        info!("Working data directory: {}", self.datadir);
+        info!(
+            "Current network_id: {}",
+            self.client.lock().await.get_network_id().await.unwrap()
+        );
         info!("Type 'list' to see available modules and functions that can be executed");
         info!("Type 'exit' or press Ctrl+C to exit the console");
 
@@ -95,6 +106,7 @@ impl Console {
                     .map(str::trim)
                     .map(|s| s.replace("\"", ""))
                     .map(|s| s.replace("\'", ""))
+                    .filter(|s| !s.is_empty())
                     .collect(),
             ),
             None => (function, Vec::new()),

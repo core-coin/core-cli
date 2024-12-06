@@ -1,6 +1,8 @@
 use atoms_rpc_types::Block;
 use serde::Serialize;
 
+use crate::Account;
+
 /// ResponseView decided if response of call will be returned as a string, json object or human readable format
 #[derive(Debug, Clone)]
 pub enum ResponseView {
@@ -39,6 +41,8 @@ pub enum Response {
 
     Block(Block),
     Struct(serde_json::Value), // Use serde_json::Value for custom structs
+
+    Accounts(Vec<Account>),
 }
 
 impl Response {
@@ -60,6 +64,20 @@ impl Response {
             Response::Block(val) => serde_json::to_string(val)
                 .unwrap_or_else(|_| "Failed to serialize to JSON".to_string()),
             Response::Struct(val) => val.to_string(),
+            Response::Accounts(accounts) => {
+                let mut result = String::new();
+                result.push_str("Accounts:\n");
+                for (num, account) in accounts.iter().enumerate() {
+                    result.push_str(&format!(
+                        "{}: {} . File - {}. {}\n",
+                        num + 1,
+                        account.address,
+                        account.path.to_str().unwrap(),
+                        account.is_unlocked_str()
+                    ));
+                }
+                result
+            }
         }
     }
 
@@ -71,6 +89,7 @@ impl Response {
             Response::String(val) => format!("String value: {:#?}", val),
             Response::Block(val) => format!("{:#?}", val),
             Response::Struct(val) => format!("Struct value: {:#?}", val),
+            Response::Accounts(_) => self.to_string(),
         }
     }
 }

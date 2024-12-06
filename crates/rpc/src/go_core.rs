@@ -89,4 +89,13 @@ impl RpcClient for GoCoreClient {
             .map_err(|e| CliError::RpcError(e.to_string()))?;
         Ok(response)
     }
+
+    async fn get_network_id(&self) -> Result<u64, CliError> {
+        let response = self
+            .provider
+            .get_chain_id()
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        Ok(response)
+    }
 }

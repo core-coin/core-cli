@@ -13,4 +13,5 @@ pub trait RpcClient {
     async fn get_block_latest(&self) -> Result<Block, CliError>;
 
     async fn get_energy_price(&self) -> Result<u128, CliError>;
+    async fn get_network_id(&self) -> Result<u64, CliError>;
 }

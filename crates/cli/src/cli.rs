@@ -8,4 +8,7 @@ pub struct Cli {
 
     #[structopt(long, default_value = "http://localhost:8545")]
     pub backend: String,
+
+    #[structopt(long, default_value = "./data")]
+    pub datadir: String,
 }

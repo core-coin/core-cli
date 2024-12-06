@@ -17,7 +17,12 @@ async fn main() -> Result<(), CliError> {
         _ => return Err(CliError::UnknownClient(args.client)),
     };
 
-    let mut console = Console::new(client);
+    // create data if not exists
+    if !std::path::Path::new(&args.datadir).exists() {
+        std::fs::create_dir_all(&args.datadir)?;
+    }
+
+    let mut console = Console::new(client, args.datadir).await;
     console.run().await;
 
     Ok(())

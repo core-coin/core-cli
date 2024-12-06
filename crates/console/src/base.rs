@@ -1,7 +1,5 @@
-use cli_error::CliError;
 use std::collections::HashMap;
 use std::process;
-use types::Response;
 
 pub type BaseFunctions = HashMap<String, Box<dyn Fn()>>; // type alias
 
@@ -18,17 +16,23 @@ fn list() {
     println!("'list' or 'help' - display this help message");
     println!("'exit' - exit the console");
     println!("Available modules:");
+
     println!("'xcb' - XCB module commands:");
     println!("  'get_block_height()' - get the current block height");
     println!("  'get_block(<hash>|<number>|'latest')' - get block information by hash or number. Use 'latest' to get the latest block");
     println!("  'get_energy_price()' - get the current energy price to allow a timely execution of a transaction");
+    println!("  'get_network_id()' - get the nework ID of the current network");
 
     println!("'xcbkey' - XCB Key module commands:");
-    println!("  'get_key()' - get the current key");
+    println!("  'list()' - list all accounts");
+    println!("  'new(optional!<password>)' - create a new account. If password is not provided, it will be prompted (it is not recommended to provide the password as an argument)");
+    println!("  'unlock(optional! <address>, optional! <password>)' - unlock an account for a signining session");
+
     println!("Example usage:");
     println!("  xcb.get_block_height()");
     println!("  xcb.block('latest')");
     println!("  xcb.block('0x1234')");
+
     println!("For every command, tou can last argument as 'json' to get the response in JSON format, e.g. xcb.get_block_height('json')");
     println!("For more information, please refer to the documentation.");
 }

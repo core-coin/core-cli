@@ -2,7 +2,7 @@ use cli_error::CliError;
 use rpc::RpcClient;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use types::response::Response;
+use types::Response;
 
 use crate::Module;
 
@@ -28,7 +28,7 @@ impl XcbModule {
 
     pub async fn block(&self, args: Vec<String>) -> Result<Response, CliError> {
         if args.len() != 1 {
-            return Err(CliError::InvalidNumberOfArguments(1, "".to_string()));
+            return Err(CliError::InvalidNumberOfArguments("1".to_string()));
         }
         let arg = &args[0];
         if arg == "latest" {
@@ -78,6 +78,14 @@ impl XcbModule {
             Err(e) => Err(e),
         }
     }
+
+    pub async fn get_network_id(&self) -> Result<Response, CliError> {
+        let network_id = self.client().await.lock().await.get_network_id().await;
+        match network_id {
+            Ok(network_id) => Ok(Response::U64(network_id)),
+            Err(e) => Err(e),
+        }
+    }
 }
 
 #[async_trait::async_trait]
@@ -87,6 +95,7 @@ impl Module for XcbModule {
             "get_block_height" => self.block_height().await,
             "get_block" => self.block(args).await,
             "get_energy_price" => self.get_energy_price().await,
+            "get_network_id" => self.get_network_id().await,
             _ => Err(CliError::UnknownCommand),
         }
     }

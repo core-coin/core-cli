@@ -26,7 +26,10 @@ fn list() {
     println!("'xcbkey' - XCB Key module commands:");
     println!("  'list()' - list all accounts");
     println!("  'new(optional!<password>)' - create a new account. If password is not provided, it will be prompted (it is not recommended to provide the password as an argument)");
+    println!("  'new_from_key(optional! <private_key>, optional! <password>)' - create a new account from existing private key. If key or password are not provided, they will be asked during the execution");
     println!("  'unlock(optional! <address>, optional! <password>)' - unlock an account for a signining session");
+    println!("  'sign(optional! <address>, optional! <message>)' - sign a message with the unlocked account");
+    println!("  'verify(optional! <address>, optional! <signature>, optional! <message>)' - verify that the signature is correct for the message and address");
 
     println!("Example usage:");
     println!("  xcb.get_block_height()");

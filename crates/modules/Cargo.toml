@@ -19,9 +19,13 @@ types.workspace = true
 rand.workspace = true
 rand_core.workspace = true
 hex.workspace = true
-rpassword = "5.0"
 serde_json.workspace = true
 chrono.workspace = true
+tracing.workspace = true
 
 atoms-signer-wallet.workspace = true
+atoms-signer.workspace = true
+
 xcb-keystore.workspace = true
+
+rpassword = "5.0"

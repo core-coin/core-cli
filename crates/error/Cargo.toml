@@ -14,3 +14,4 @@ publish = true
 thiserror.workspace = true
 serde_json.workspace = true
 atoms-signer-wallet.workspace = true
+atoms-signer.workspace = true

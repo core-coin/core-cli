@@ -60,4 +60,5 @@ atoms-transport = {git = "https://github.com/core-coin/atoms-rs.git"}
 atoms-transport-http = {git = "https://github.com/core-coin/atoms-rs.git"}
 atoms-rpc-types = {git = "https://github.com/core-coin/atoms-rs.git"}
 atoms-signer-wallet = {git = "https://github.com/core-coin/atoms-rs.git", features= ["keystore"]}
+atoms-signer =  {git = "https://github.com/core-coin/atoms-rs.git"}
 xcb-keystore = {git = "https://github.com/core-coin/xcb-keystore-rs.git"}

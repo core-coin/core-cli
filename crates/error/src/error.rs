@@ -23,9 +23,13 @@ pub enum CliError {
     WalletError(#[from] wallet::WalletError),
     #[error("Account with address {0} not found")]
     AccountNotFound(String),
+    #[error("Account with address {0} is not unlocked")]
+    AccountNotUnlocked(String),
 
     #[error("Error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("Error: {0}")]
     SerdeError(#[from] serde_json::Error),
+    #[error("Error: {0}")]
+    AtomsSignerError(#[from] atoms_signer::Error),
 }

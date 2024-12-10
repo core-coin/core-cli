@@ -60,6 +60,9 @@ impl Console {
             let readline = rl.readline(">> ");
             match readline {
                 Ok(line) => {
+                    if line == "" {
+                        continue;
+                    }
                     rl.add_history_entry(line.as_str()).unwrap();
 
                     match self.evaluate(line).await {

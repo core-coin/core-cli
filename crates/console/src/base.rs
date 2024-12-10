@@ -30,6 +30,7 @@ fn list() {
     println!("  'unlock(optional! <address>, optional! <password>)' - unlock an account for a signining session");
     println!("  'sign(optional! <address>, optional! <message>)' - sign a message with the unlocked account");
     println!("  'verify(optional! <address>, optional! <signature>, optional! <message>)' - verify that the signature is correct for the message and address");
+    println!("  'inspect(optional! <address>)' - inspect the account details. Account must be unlocked to inspect it");
 
     println!("Example usage:");
     println!("  xcb.get_block_height()");

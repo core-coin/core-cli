@@ -90,6 +90,18 @@ impl XcbKeyModule {
         self.choose_file_or_string(password, "password")
     }
 
+    /// Get core ID from arguments or prompt
+    /// If no arguments are provided, prompt for core ID
+    /// If one argument is provided, treat it as core ID
+    /// If filepaths are provided, read the files
+    fn get_core_id(&self, args: Vec<String>) -> Result<String, CliError> {
+        match args.len() {
+            1 => Ok(args[0].clone()),
+            0 => self.prompt_string("Enter address (or a path to the file): "),
+            _ => Err(CliError::InvalidNumberOfArguments("0 or 1".to_string())),
+        }
+    }
+
     /// Get private key and password from arguments or prompt
     /// If no arguments are provided, prompt for private key and password
     /// If one argument is provided, treat it as private key and prompt for password
@@ -327,6 +339,7 @@ impl Module for XcbKeyModule {
             "new" => self.create_account(args).await,
             "new_from_key" => self.create_account_from_key(args).await,
             "list" => self.list_accounts().await,
+            "inspect" => self.inspect(args).await,
             "unlock" => self.unlock_account(args).await,
             "sign" => self.sign(args).await,
             "verify" => self.verify(args).await,
@@ -393,7 +406,7 @@ impl XcbKeyModule {
             .accounts
             .get_account(&core_id)
             .ok_or(CliError::AccountNotFound(core_id.clone()))?;
-        if account.unlocked == 0 {
+        if !account.is_unlocked() {
             return Err(CliError::AccountNotUnlocked(core_id.clone()));
         }
         let signature = account
@@ -417,5 +430,33 @@ impl XcbKeyModule {
         } else {
             Ok(Response::String("Signature is invalid".to_string()))
         }
+    }
+
+    /// Inspect the account with the provided core ID
+    /// If the account is not unlocked - returns an error
+    /// Otherwise, returns the core ID, public key, and private key
+    async fn inspect(&self, args: Vec<String>) -> Result<Response, CliError> {
+        let core_id = self.get_core_id(args)?;
+        let account = self
+            .accounts
+            .get_account(&core_id)
+            .ok_or(CliError::AccountNotFound(core_id.clone()))?;
+        if !account.is_unlocked() {
+            return Ok(Response::String("Account is locked".to_string()));
+        }
+        Ok(Response::String(format!(
+            "Core ID: {}\nPublic Key: {}\nPrivate key: {}",
+            account.address,
+            hex::encode(
+                account
+                    .wallet
+                    .clone()
+                    .unwrap()
+                    .signer()
+                    .verifying_key()
+                    .as_bytes()
+            ),
+            hex::encode(account.wallet.unwrap().signer().to_bytes())
+        )))
     }
 }

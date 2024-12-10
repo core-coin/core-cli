@@ -11,7 +11,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::{fs, io};
 use tokio::sync::Mutex;
-use types::account::Accounts;
+use types::account::{Accounts, KeyFile};
 use types::response::Response;
 use types::Account;
 use xcb_keystore::EthKeystore as XcbKeystore;
@@ -238,8 +238,8 @@ impl XcbKeyModule {
     }
 
     /// Generate random keyfile with provided password
-    /// Returns a keyfile with the wallet information
-    async fn generate_keyfile(&self, password: String) -> Result<LocalWallet, CliError> {
+    /// Returns a keyfile with the wallet information the ID of the account
+    async fn generate_keyfile(&self, password: String) -> Result<(LocalWallet, String), CliError> {
         let mut rng = OsRng;
         let keystore = LocalWallet::new_keystore(
             self.accounts_dir.clone(),
@@ -249,16 +249,16 @@ impl XcbKeyModule {
             self.network_id,
         )
         .map_err(CliError::WalletError)?;
-        Ok(keystore.0)
+        Ok(keystore)
     }
 
     /// Encrypt private key with provided password
-    /// Returns a keyfile with the wallet information
+    /// Returns a keyfile with the wallet information and the ID of the account
     async fn encrypt_keyfile(
         &self,
         key: String,
         password: String,
-    ) -> Result<LocalWallet, CliError> {
+    ) -> Result<(LocalWallet, String), CliError> {
         let mut rng = OsRng;
         let key = hex::decode(&key).map_err(|_| CliError::InvalidHexArgument(key))?;
         let keystore = LocalWallet::encrypt_keystore(
@@ -270,15 +270,15 @@ impl XcbKeyModule {
             self.network_id,
         )
         .map_err(CliError::WalletError)?;
-        Ok(keystore.0)
+        Ok(keystore)
     }
 
     /// Add account to the shared list of accounts
-    async fn add_account_to_list(&self, key: &LocalWallet) {
+    async fn add_account_to_list(&self, key: &LocalWallet, id: String) {
         let account = Account {
             address: key.address().to_string(),
             wallet: Some(key.clone()),
-            path: PathBuf::from(&self.accounts_dir),
+            path: PathBuf::from(self.accounts_dir.clone() + "/" + &id),
             unlocked: 0,
         };
         self.accounts.add_account(account);
@@ -289,10 +289,7 @@ impl XcbKeyModule {
         let pk_hex = hex::encode(key.signer().to_bytes());
         let public_key = hex::encode(key.signer().verifying_key().as_bytes());
         let core_id = key.address().to_string();
-        Response::String(format!(
-            "Keyfile added to directory {}.\nPrivate Key: {}\nPublic Key: {}\nCoreID: {}",
-            self.accounts_dir, pk_hex, public_key, core_id
-        ))
+        Response::Keyfile(KeyFile::new(core_id, public_key, pk_hex))
     }
 
     /// Prompt for password
@@ -353,16 +350,16 @@ impl XcbKeyModule {
     async fn create_account(&self, args: Vec<String>) -> Result<Response, CliError> {
         let password = self.get_password(args)?;
         let key = self.generate_keyfile(password).await?;
-        self.add_account_to_list(&key).await;
-        Ok(self.format_keyfile_response(&key))
+        self.add_account_to_list(&key.0, key.1).await;
+        Ok(self.format_keyfile_response(&key.0))
     }
 
     /// Create a new account from a provided private key
     async fn create_account_from_key(&self, args: Vec<String>) -> Result<Response, CliError> {
         let (key, password) = self.get_key_and_password(args)?;
         let key = self.encrypt_keyfile(key, password).await?;
-        self.add_account_to_list(&key).await;
-        Ok(self.format_keyfile_response(&key))
+        self.add_account_to_list(&key.0, key.1).await;
+        Ok(self.format_keyfile_response(&key.0))
     }
 
     /// List all accounts in the keystore directory
@@ -444,19 +441,8 @@ impl XcbKeyModule {
         if !account.is_unlocked() {
             return Ok(Response::String("Account is locked".to_string()));
         }
-        Ok(Response::String(format!(
-            "Core ID: {}\nPublic Key: {}\nPrivate key: {}",
-            account.address,
-            hex::encode(
-                account
-                    .wallet
-                    .clone()
-                    .unwrap()
-                    .signer()
-                    .verifying_key()
-                    .as_bytes()
-            ),
-            hex::encode(account.wallet.unwrap().signer().to_bytes())
+        Ok(Response::Keyfile(KeyFile::from_wallet(
+            account.wallet.as_ref().unwrap(),
         )))
     }
 }

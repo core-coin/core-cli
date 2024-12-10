@@ -14,6 +14,7 @@ publish = true
 serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true
+hex.workspace = true
 
 atoms-rpc-types.workspace = true
 atoms-signer-wallet.workspace = true

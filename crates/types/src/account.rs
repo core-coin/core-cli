@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use hex::ToHex;
 use serde::Serialize;
 use std::{
     path::PathBuf,
@@ -130,5 +131,37 @@ impl Accounts {
             account.wallet = Some(wallet);
             account.unlocked = Utc::now().timestamp() + ACCOUNT_UNLOCK_DURATION;
         }
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct KeyFile {
+    pub address: String,
+    pub public_key: String,
+    pub private_key: String,
+}
+
+impl KeyFile {
+    pub fn new(address: String, public_key: String, private_key: String) -> Self {
+        KeyFile {
+            address,
+            public_key,
+            private_key,
+        }
+    }
+
+    pub fn from_wallet(wallet: &atoms_signer_wallet::LocalWallet) -> Self {
+        KeyFile {
+            address: wallet.address().to_string(),
+            public_key: hex::encode(wallet.signer().verifying_key().as_bytes()),
+            private_key: hex::encode(wallet.signer().to_bytes()),
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        format!(
+            "Address: {}\nPublic key: {}\nPrivate key: {}",
+            self.address, self.public_key, self.private_key
+        )
     }
 }

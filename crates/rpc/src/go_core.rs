@@ -19,14 +19,6 @@ impl GoCoreClient {
 
         GoCoreClient { provider }
     }
-
-    async fn get_block(&self, id: BlockId) -> Result<Option<Block>, CliError> {
-        let res = self.provider.get_block(id, true).await;
-        match res {
-            Ok(block) => Ok(block),
-            Err(e) => Err(CliError::RpcError(e.to_string())),
-        }
-    }
 }
 
 #[async_trait]

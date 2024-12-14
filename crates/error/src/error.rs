@@ -1,5 +1,3 @@
-use core::error;
-
 use atoms_signer_wallet as wallet;
 use thiserror::Error;
 
@@ -25,6 +23,12 @@ pub enum CliError {
     AccountNotFound(String),
     #[error("Account with address {0} is not unlocked")]
     AccountNotUnlocked(String),
+    #[error("Invalid password")]
+    InvalidPassword,
+    #[error("Invalid signature")]
+    InvalidSignature,
+    #[error("Invalid private key")]
+    InvalidPrivateKey,
 
     #[error("Error: {0}")]
     IoError(#[from] std::io::Error),

@@ -1,5 +1,4 @@
 use chrono::prelude::*;
-use hex::ToHex;
 use serde::Serialize;
 use std::{
     path::PathBuf,
@@ -10,7 +9,7 @@ const ACCOUNT_UNLOCK_DURATION: i64 = 300;
 
 /// A struct representing an account.
 /// Used to store the account's address, wallet, path, and unlocked state.
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct Account {
     /// The address of the account.
     pub address: String,
@@ -106,7 +105,7 @@ impl Accounts {
     pub fn get_account(&self, address: &str) -> Option<Account> {
         self.check_outdated_unlocks();
 
-        let mut accounts = self.accounts.lock().unwrap();
+        let accounts = self.accounts.lock().unwrap();
         accounts.iter().find(|a| a.address == address).cloned()
     }
 
@@ -134,7 +133,7 @@ impl Accounts {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct KeyFile {
     pub address: String,
     pub public_key: String,
@@ -157,9 +156,12 @@ impl KeyFile {
             private_key: hex::encode(wallet.signer().to_bytes()),
         }
     }
+}
 
-    pub fn to_string(&self) -> String {
-        format!(
+impl std::fmt::Display for KeyFile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
             "Address: {}\nPublic key: {}\nPrivate key: {}",
             self.address, self.public_key, self.private_key
         )

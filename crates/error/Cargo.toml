@@ -15,3 +15,5 @@ thiserror.workspace = true
 serde_json.workspace = true
 atoms-signer-wallet.workspace = true
 atoms-signer.workspace = true
+serde.workspace = true
+base-primitives.workspace = true

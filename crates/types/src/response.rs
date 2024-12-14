@@ -2,11 +2,12 @@ use atoms_rpc_types::Block;
 use serde::Serialize;
 
 use crate::{account::KeyFile, Account};
-
+use std::str::FromStr;
 /// ResponseView decided if response of call will be returned as a string, json object or human readable format
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum ResponseView {
     /// Response will be returned as a string
+    #[default]
     String,
     /// Response will be returned as a json object
     Json,
@@ -14,24 +15,20 @@ pub enum ResponseView {
     Human,
 }
 
-impl Default for ResponseView {
-    fn default() -> Self {
-        ResponseView::String
-    }
-}
+impl FromStr for ResponseView {
+    type Err = ();
 
-impl ResponseView {
-    pub fn from_str(s: &str) -> Option<Self> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "string" => Some(ResponseView::String),
-            "json" => Some(ResponseView::Json),
-            "human" => Some(ResponseView::Human),
-            _ => None,
+            "string" => Ok(ResponseView::String),
+            "json" => Ok(ResponseView::Json),
+            "human" => Ok(ResponseView::Human),
+            _ => Err(()),
         }
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, PartialEq, Debug, Clone)]
 pub enum Response {
     U64(u64),
     U128(u128),
@@ -46,6 +43,39 @@ pub enum Response {
     Keyfile(KeyFile),
 }
 
+impl std::fmt::Display for Response {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Response::U64(val) => write!(f, "{}", val),
+            Response::U128(val) => write!(f, "{}", val),
+            Response::Bool(val) => write!(f, "{}", val),
+            Response::String(val) => write!(f, "{}", val),
+            Response::Block(val) => write!(
+                f,
+                "{}",
+                serde_json::to_string(val)
+                    .unwrap_or_else(|_| "Failed to serialize to JSON".to_string())
+            ),
+            Response::Struct(val) => write!(f, "{}", val),
+            Response::Accounts(accounts) => {
+                writeln!(f, "Accounts:")?;
+                for (num, account) in accounts.iter().enumerate() {
+                    writeln!(
+                        f,
+                        "{}: {} . File - {}. {}",
+                        num + 1,
+                        account.address,
+                        account.path.to_str().unwrap(),
+                        account.is_unlocked_str()
+                    )?;
+                }
+                Ok(())
+            }
+            Response::Keyfile(keyfile) => write!(f, "{}", keyfile),
+        }
+    }
+}
+
 impl Response {
     pub fn format(&self, view: ResponseView) -> String {
         match view {
@@ -53,33 +83,6 @@ impl Response {
             ResponseView::Json => serde_json::to_string(self)
                 .unwrap_or_else(|_| "Failed to serialize to JSON".to_string()),
             ResponseView::Human => self.to_human_readable(),
-        }
-    }
-
-    fn to_string(&self) -> String {
-        match self {
-            Response::U64(val) => val.to_string(),
-            Response::U128(val) => val.to_string(),
-            Response::Bool(val) => val.to_string(),
-            Response::String(val) => val.clone(),
-            Response::Block(val) => serde_json::to_string(val)
-                .unwrap_or_else(|_| "Failed to serialize to JSON".to_string()),
-            Response::Struct(val) => val.to_string(),
-            Response::Accounts(accounts) => {
-                let mut result = String::new();
-                result.push_str("Accounts:\n");
-                for (num, account) in accounts.iter().enumerate() {
-                    result.push_str(&format!(
-                        "{}: {} . File - {}. {}\n",
-                        num + 1,
-                        account.address,
-                        account.path.to_str().unwrap(),
-                        account.is_unlocked_str()
-                    ));
-                }
-                result
-            }
-            Response::Keyfile(keyfile) => keyfile.to_string(),
         }
     }
 

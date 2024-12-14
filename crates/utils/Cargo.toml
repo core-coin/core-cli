@@ -1,0 +1,15 @@
+[package]
+authors = { workspace = true }
+description = "Various helper functions used in Core-CLI"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = ["core blockchain", "xcb", "cli", "utils"]
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+name = "utils"
+publish = true
+
+[dependencies]
+uuid = {version = "1.11.0"}
+cli-error.workspace = true

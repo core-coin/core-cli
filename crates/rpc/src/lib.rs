@@ -5,6 +5,9 @@ use cli_error::CliError;
 pub mod go_core;
 pub use go_core::GoCoreClient;
 
+pub mod mock;
+pub use mock::MockRpcClient;
+
 #[async_trait]
 pub trait RpcClient {
     async fn get_block_height(&self) -> Result<u64, CliError>;

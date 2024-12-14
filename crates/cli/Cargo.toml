@@ -12,3 +12,8 @@ publish = true
 
 [dependencies]
 structopt.workspace = true
+
+assert_cmd = {version = "2.0.16"}
+predicates = {version = "3.1.2"}
+types.workspace = true
+utils.workspace = true

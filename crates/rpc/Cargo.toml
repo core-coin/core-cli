@@ -15,6 +15,8 @@ async-trait.workspace = true
 cli-error.workspace = true
 serde_json.workspace = true
 reqwest.workspace = true
+tokio.workspace = true
+types.workspace = true
 
 atoms-provider = {workspace = true, features = ["reqwest"]}
 atoms-rpc-client = {workspace = true, features = ["reqwest"]}

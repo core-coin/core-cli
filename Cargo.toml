@@ -6,7 +6,8 @@ members = [
     "crates/error",
     "crates/console",
     "crates/rpc",
-    "crates/types"
+    "crates/types",
+    "crates/utils"
 ]
 
 resolver = "2"
@@ -34,6 +35,7 @@ cli-error = { path = "./crates/error" }
 console = { path = "./crates/console" }
 rpc = { path = "./crates/rpc" }
 types = {path = "./crates/types" }
+utils = {path = "./crates/utils"}
 
 # External dependencies
 structopt = "0.3"

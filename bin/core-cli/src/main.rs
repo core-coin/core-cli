@@ -2,10 +2,10 @@ use cli::Cli;
 use cli_error::CliError;
 use console::Console;
 use rpc::{go_core::GoCoreClient, RpcClient};
+use rustyline::DefaultEditor;
 use std::sync::Arc;
 use structopt::StructOpt;
 use tokio::sync::Mutex;
-use tracing_subscriber;
 
 #[tokio::main]
 async fn main() -> Result<(), CliError> {
@@ -17,12 +17,14 @@ async fn main() -> Result<(), CliError> {
         _ => return Err(CliError::UnknownClient(args.client)),
     };
 
-    // create data if not exists
+    // create datadir if not exists
     if !std::path::Path::new(&args.datadir).exists() {
         std::fs::create_dir_all(&args.datadir)?;
     }
+    let stdout = std::io::stdout();
+    let editor = DefaultEditor::new().unwrap();
 
-    let mut console = Console::new(client, args.datadir).await;
+    let mut console = Console::new(client, args.datadir, stdout, editor).await;
     console.run().await;
 
     Ok(())

@@ -1,14 +1,19 @@
 use structopt::StructOpt;
+use types::DEFAULT_BACKEND;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "core-cli")]
 pub struct Cli {
-    #[structopt(long, default_value = "go-core")]
+    #[structopt(long, short, default_value = "go-core")]
     pub client: String,
 
-    #[structopt(long, default_value = "http://localhost:8545")]
+    #[structopt(
+        long,
+        short,
+        default_value = DEFAULT_BACKEND,
+    )]
     pub backend: String,
 
-    #[structopt(long, default_value = "./data")]
+    #[structopt(long, short, default_value = "./data")]
     pub datadir: String,
 }

@@ -1,5 +1,5 @@
 use atoms_signer::{Signature, Signer};
-use atoms_signer_wallet::LocalWallet;
+use atoms_signer_wallet::{LocalWallet, WalletError};
 use cli_error::CliError;
 use hex::ToHex;
 use rand::rngs::OsRng;
@@ -21,7 +21,6 @@ use crate::Module;
 const ACCOUNT_SUBDIR: &str = "keystore";
 
 pub struct XcbKeyModule {
-    client: Arc<Mutex<dyn RpcClient + Send>>,
     accounts_dir: String,
     network_id: u64,
     accounts: Accounts,
@@ -42,15 +41,10 @@ impl XcbKeyModule {
         }
 
         XcbKeyModule {
-            client,
             accounts_dir,
             network_id,
             accounts,
         }
-    }
-
-    async fn client(&self) -> Arc<Mutex<dyn RpcClient + Send>> {
-        self.client.clone()
     }
 
     /// Read keyfile from the file
@@ -260,7 +254,7 @@ impl XcbKeyModule {
         password: String,
     ) -> Result<(LocalWallet, String), CliError> {
         let mut rng = OsRng;
-        let key = hex::decode(&key).map_err(|_| CliError::InvalidHexArgument(key))?;
+        let key = hex::decode(&key).map_err(|_| CliError::InvalidPrivateKey)?;
         let keystore = LocalWallet::encrypt_keystore(
             self.accounts_dir.clone(),
             &mut rng,
@@ -301,11 +295,11 @@ impl XcbKeyModule {
     /// Prompt for string
     fn prompt_string(&self, prompt: &str) -> Result<String, CliError> {
         print!("{}", prompt);
-        io::stdout().flush().map_err(|e| CliError::IoError(e))?;
+        io::stdout().flush().map_err(CliError::IoError)?;
         let mut address = String::new();
         io::stdin()
             .read_line(&mut address)
-            .map_err(|e| CliError::IoError(e))?;
+            .map_err(CliError::IoError)?;
         Ok(address.trim().to_string())
     }
 
@@ -385,8 +379,14 @@ impl XcbKeyModule {
             .accounts
             .get_account(&core_id)
             .ok_or(CliError::AccountNotFound(core_id.clone()))?;
-        let wallet = LocalWallet::decrypt_keystore(&account.path, password, self.network_id)
-            .map_err(CliError::WalletError)?;
+        let wallet = match LocalWallet::decrypt_keystore(&account.path, password, self.network_id) {
+            Ok(wallet) => wallet,
+            Err(WalletError::EthKeystoreError(xcb_keystore::KeystoreError::MacMismatch)) => {
+                return Err(CliError::InvalidPassword)
+            }
+            Err(e) => return Err(CliError::WalletError(e)),
+        };
+
         self.accounts.unlock_account(&account.address, wallet);
         Ok(Response::String(format!(
             "Account {} successfully unlocked!",
@@ -417,8 +417,7 @@ impl XcbKeyModule {
     /// Verify that message was signed with the private key of the account
     async fn verify(&self, args: Vec<String>) -> Result<Response, CliError> {
         let (address, signature, message) = self.get_address_signature_and_message(args)?;
-        let signature =
-            Signature::from_str(&signature).map_err(|_| CliError::InvalidHexArgument(signature))?;
+        let signature = Signature::from_str(&signature).map_err(|_| CliError::InvalidSignature)?;
         let verified = signature
             .recover_address_from_msg(message, self.network_id)
             .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;

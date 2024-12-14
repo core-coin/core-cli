@@ -3,26 +3,35 @@ use modules::xcb::XcbModule;
 use modules::{Module, XcbKeyModule};
 use rpc::RpcClient;
 use rustyline::error::ReadlineError;
-use rustyline::{DefaultEditor, Editor};
+use rustyline::history::FileHistory;
+use rustyline::Editor;
 use std::collections::HashMap;
+use std::io::Write;
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{debug, info};
+use tracing::debug;
 use types::account::Accounts;
-use types::{Account, Response, ResponseView};
+use types::ResponseView;
 
 use crate::base::{base_functions, BaseFunctions};
 
-pub struct Console {
+pub struct Console<W: Write> {
     modules: HashMap<String, Box<dyn Module>>,
     base_functions: BaseFunctions,
     client: Arc<Mutex<dyn RpcClient + Send>>,
     datadir: String,
-    accounts: Accounts,
+    writer: W,
+    editor: Editor<(), FileHistory>,
 }
 
-impl Console {
-    pub async fn new(client: Arc<Mutex<dyn RpcClient + Send>>, datadir: String) -> Self {
+impl<W: Write> Console<W> {
+    pub async fn new(
+        client: Arc<Mutex<dyn RpcClient + Send>>,
+        datadir: String,
+        writer: W,
+        editor: Editor<(), FileHistory>,
+    ) -> Self {
         let mut modules: HashMap<String, Box<dyn Module>> = HashMap::new();
         let accounts = Accounts::new(vec![]);
 
@@ -37,55 +46,53 @@ impl Console {
             client,
             base_functions: base_functions(),
             datadir,
-            accounts,
+            writer,
+            editor,
         }
     }
 
     pub async fn run(&mut self) {
-        let mut rl = DefaultEditor::new().unwrap();
-        if rl.load_history("history.txt").is_err() {
-            println!("No previous history.");
+        // create history file if not exists
+        if !std::path::Path::new(&self.history_file()).exists() {
+            std::fs::File::create(self.history_file()).unwrap();
         }
-
-        info!("Welcome to the Core Blockchain Console");
-        info!("Working data directory: {}", self.datadir);
-        info!(
+        if self.editor.load_history(&self.history_file()).is_err() {
+            self.write("No previous history.");
+        }
+        self.write("Welcome to the Core Blockchain Console");
+        self.write(&format!("Working data directory: {}", self.datadir));
+        self.write(&format!(
             "Current network_id: {}",
             self.client.lock().await.get_network_id().await.unwrap()
-        );
-        info!("Type 'list' to see available modules and functions that can be executed");
-        info!("Type 'exit' or press Ctrl+C to exit the console");
+        ));
+        self.write("Type 'list' to see available modules and functions that can be executed");
+        self.write("Type 'exit' or press Ctrl+C to exit the console");
 
         loop {
-            let readline = rl.readline(">> ");
+            let readline = self.editor.readline(">> ");
             match readline {
                 Ok(line) => {
-                    if line == "" {
+                    if line.is_empty() {
                         continue;
                     }
-                    rl.add_history_entry(line.as_str()).unwrap();
+                    self.editor.add_history_entry(line.as_str()).unwrap();
 
                     match self.evaluate(line).await {
-                        Ok(result) => println!("{}", result),
-                        Err(err) => eprintln!("Error: {}", err),
+                        Ok(result) => self.write(&result.to_string()),
+                        Err(err) => self.write(&format!("Error: {}", err)),
                     }
                 }
-                Err(ReadlineError::Interrupted) => {
-                    println!("CTRL-C");
-                    break;
-                }
-                Err(ReadlineError::Eof) => {
-                    println!("CTRL-D");
+                Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
                     break;
                 }
                 Err(err) => {
-                    println!("Error: {:?}", err);
+                    self.write(format!("Error: {:?}", err).as_str());
                     break;
                 }
             }
         }
 
-        rl.save_history("history.txt").unwrap();
+        self.editor.save_history(&self.history_file()).unwrap();
     }
 
     // Default command format: module.function(arg1,arg2,...argN)
@@ -119,9 +126,8 @@ impl Console {
             "Module: {}, Function: {}, Args: {:?}",
             module_name, function_name, args
         );
-
         let response_view = if let Some(last_arg) = args.last() {
-            if let Some(view) = ResponseView::from_str(last_arg) {
+            if let Ok(view) = ResponseView::from_str(last_arg) {
                 args.pop(); // Remove the last argument if it's a valid ResponseView
                 view
             } else {
@@ -138,5 +144,13 @@ impl Console {
         } else {
             Err(CliError::UnknownModule(module_name.to_string()))
         }
+    }
+
+    fn write(&mut self, message: &str) {
+        writeln!(self.writer, "{}", message).unwrap();
+    }
+
+    fn history_file(&self) -> String {
+        self.datadir.clone() + "/history.txt"
     }
 }

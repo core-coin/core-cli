@@ -19,14 +19,14 @@ impl XcbModule {
         self.client.clone()
     }
 
-    pub async fn block_height(&self) -> Result<Response, CliError> {
+    async fn block_height(&self) -> Result<Response, CliError> {
         match self.client.lock().await.get_block_height().await {
             Ok(height) => Ok(Response::U64(height)),
             Err(e) => Err(e),
         }
     }
 
-    pub async fn block(&self, args: Vec<String>) -> Result<Response, CliError> {
+    async fn block(&self, args: Vec<String>) -> Result<Response, CliError> {
         if args.len() != 1 {
             return Err(CliError::InvalidNumberOfArguments("1".to_string()));
         }
@@ -71,7 +71,7 @@ impl XcbModule {
         }
     }
 
-    pub async fn get_energy_price(&self) -> Result<Response, CliError> {
+    async fn get_energy_price(&self) -> Result<Response, CliError> {
         let price = self.client().await.lock().await.get_energy_price().await;
         match price {
             Ok(price) => Ok(Response::U128(price)),
@@ -79,7 +79,7 @@ impl XcbModule {
         }
     }
 
-    pub async fn get_network_id(&self) -> Result<Response, CliError> {
+    async fn get_network_id(&self) -> Result<Response, CliError> {
         let network_id = self.client().await.lock().await.get_network_id().await;
         match network_id {
             Ok(network_id) => Ok(Response::U64(network_id)),

@@ -9,13 +9,29 @@ on:
       - '**'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  test:
+    name: Test on ${{ matrix.os }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         arch: [x86_64, aarch64]
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            arch: aarch64
+            target: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            arch: x86_64
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            arch: aarch64
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            arch: x86_64
+            target: x86_64-pc-windows-gnu
 
     steps:
       - name: Checkout code
@@ -27,13 +43,8 @@ jobs:
           toolchain: stable
           profile: minimal
 
-      - name: Install dependencies
-        run: |
-          rustup target add x86_64-unknown-linux-gnu
-          rustup target add aarch64-unknown-linux-gnu
-          rustup target add x86_64-apple-darwin
-          rustup target add aarch64-apple-darwin
-          rustup target add x86_64-pc-windows-gnu
+      - name: Install target
+        run: rustup target add ${{ matrix.target }}
 
       - name: Run linters
         run: cargo clippy --all-targets --all-features -- -D warnings
@@ -42,14 +53,7 @@ jobs:
         run: cargo test --all-targets --all-features
 
       - name: Build binary
-        run: |
-          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-            cargo build --release --target ${{ matrix.arch }}-unknown-linux-gnu;
-          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            cargo build --release --target ${{ matrix.arch }}-apple-darwin;
-          elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-            cargo build --release --target ${{ matrix.arch }}-pc-windows-gnu;
-          fi
+        run: cargo build --release --target ${{ matrix.target }}
 
   release:
     if: github.ref == 'refs/heads/master'
@@ -65,7 +69,7 @@ jobs:
           toolchain: stable
           profile: minimal
 
-      - name: Install dependencies
+      - name: Install targets
         run: |
           rustup target add x86_64-unknown-linux-gnu
           rustup target add aarch64-unknown-linux-gnu
@@ -98,52 +102,52 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload release assets
+      - name: Upload Linux x86_64 binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-unknown-linux-gnu/release/your_binary
-          asset_name: your_binary-x86_64-unknown-linux-gnu
+          asset_path: ./target/x86_64-unknown-linux-gnu/release/core-cli
+          asset_name: core-cli-x86_64-unknown-linux-gnu
           asset_content_type: application/octet-stream
 
-      - name: Upload release assets
+      - name: Upload Linux aarch64 binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/aarch64-unknown-linux-gnu/release/your_binary
-          asset_name: your_binary-aarch64-unknown-linux-gnu
+          asset_path: ./target/aarch64-unknown-linux-gnu/release/core-cli
+          asset_name: core-cli-aarch64-unknown-linux-gnu
           asset_content_type: application/octet-stream
 
-      - name: Upload release assets
+      - name: Upload macOS x86_64 binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-apple-darwin/release/your_binary
-          asset_name: your_binary-x86_64-apple-darwin
+          asset_path: ./target/x86_64-apple-darwin/release/core-cli
+          asset_name: core-cli-x86_64-apple-darwin
           asset_content_type: application/octet-stream
 
-      - name: Upload release assets
+      - name: Upload macOS aarch64 binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/aarch64-apple-darwin/release/your_binary
-          asset_name: your_binary-aarch64-apple-darwin
+          asset_path: ./target/aarch64-apple-darwin/release/core-cli
+          asset_name: core-cli-aarch64-apple-darwin
           asset_content_type: application/octet-stream
 
-      - name: Upload release assets
+      - name: Upload Windows x86_64 binary
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-pc-windows-gnu/release/your_binary.exe
-          asset_name: your_binary-x86_64-pc-windows-gnu.exe
+          asset_path: ./target/x86_64-pc-windows-gnu/release/core-cli.exe
+          asset_name: core-cli-x86_64-pc-windows-gnu.exe
           asset_content_type: application/octet-stream

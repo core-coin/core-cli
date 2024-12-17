@@ -36,11 +36,13 @@ jobs:
 
       - name: Run linters
         run: cargo clippy --all-targets --all-features -- -D warnings
-      - name: Run tests
-        run: cargo test --all-targets --all-features
 
       - name: Build binary
         run: cargo build --release
+
+      - name: Run tests
+        run: cargo test --all-targets --all-features
+
 
   release:
     if: github.ref == 'refs/heads/master'

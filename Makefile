@@ -26,7 +26,7 @@ run-debug:
 	$(CARGO) run
 
 # Test the project
-test: build
+test: debug
 	$(CARGO) test --all-targets --all-features
 
 # Clean the project

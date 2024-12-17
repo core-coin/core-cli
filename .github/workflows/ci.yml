@@ -20,7 +20,6 @@ jobs:
           - {platform: macos-latest,     os: darwin,  arch: arm64, path: darwin-arm64}
           - {platform: ubuntu-latest,    os: linux,   arch: amd64, path: linux-x86_64}
           - {platform: raspbian-private, os: linux,   arch: arm64, path: linux-arm64}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -50,13 +49,13 @@ jobs:
       - name: Run tests
         run: make test
 
-      -name: Build release artifact
+      - name: Build release artifact
         if: github.ref == 'refs/heads/master'
         run: make build
 
       - name: Upload artifacts
         if: github.ref == 'refs/heads/master'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v2
         with:
           name: core-cli-${{ matrix.config.path }}
           path: ./target/release/core-cli
@@ -68,37 +67,40 @@ jobs:
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
-    - name: Get version from Cargo.toml
-      id: cargo-version
-      run: echo "::set-output name=VERSION::$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)"/\1/')"
-    - name: Create new tag
-      id: tag
-      run: |
-        git fetch --tags
-        TAG_EXISTS=$(git tag -l "v${{ steps.cargo-version.outputs.VERSION }}")
-        if [ -n "$TAG_EXISTS" ]; then
-          echo "Tag v${{ steps.cargo-version.outputs.VERSION }} already exists"
-          exit 1
-        fi
-        git tag v${{ steps.cargo-version.outputs.VERSION }}
-        git push origin v${{ steps.cargo-version.outputs.VERSION }}
-    - name: Create GitHub Release
-      uses: actions/create-release@v1
-      with:
-        tag_name: v${{ steps.cargo-version.outputs.VERSION }}
-        release_name: Release v${{ steps.cargo-version.outputs.VERSION }}
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get version from Cargo.toml
+        id: cargo-version
+        run: echo "::set-output name=VERSION::$(grep '^version =' Cargo.toml | sed -E 's/version = \"(.*)\"/\1/')"
+
+      - name: Create new tag
+        id: tag
+        run: |
+          git fetch --tags
+          TAG_EXISTS=$(git tag -l "v${{ steps.cargo-version.outputs.VERSION }}")
+          if [ -n "$TAG_EXISTS" ]; then
+            echo "Tag v${{ steps.cargo-version.outputs.VERSION }} already exists"
+            exit 1
+          fi
+          git tag v${{ steps.cargo-version.outputs.VERSION }}
+          git push origin v${{ steps.cargo-version.outputs.VERSION }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ steps.cargo-version.outputs.VERSION }}
+          release_name: Release v${{ steps.cargo-version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   artifacts:
     needs: release
@@ -113,19 +115,21 @@ jobs:
           {path: darwin-arm64, file_ext: ""},
         ]
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Artifact download
-      uses: actions/download-artifact@v4
-      with:
-        name: core-cli-${{ matrix.platform.path}}
-        path: ./core-cli-${{ matrix.platform.path }}
-    - name: Upload release assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.release.outputs.upload_url }}
-        asset_path: ./core-cli-${{ matrix.platform.path }}/core-cli${{matrix.platform.file_ext}}
-        asset_name: core-cli-${{ matrix.platform.path }}${{matrix.platform.file_ext}}
-        asset_content_type: application/octet-stream
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: core-cli-${{ matrix.platform.path }}
+          path: ./core-cli-${{ matrix.platform.path }}
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./core-cli-${{ matrix.platform.path }}/core-cli${{ matrix.platform.file_ext }}
+          asset_name: core-cli-${{ matrix.platform.path }}${{ matrix.platform.file_ext }}
+          asset_content_type: application/octet-stream

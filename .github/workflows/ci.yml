@@ -31,7 +31,7 @@ jobs:
           toolchain: stable
           profile: minimal
 
-      - name: Install OpenSSL and pkg-config (Linux only)
+      - name: Install OpenSSL and pkg-config (Linux ARM64 only)
         if: matrix.config.path == 'linux-arm64'
         run: |
           sudo apt-get update
@@ -50,100 +50,82 @@ jobs:
       - name: Run tests
         run: make test
 
+      -name: Build release artifact
+        if: github.ref == 'refs/heads/master'
+        run: make build
+
+      - name: Upload artifacts
+        if: github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-cli-${{ matrix.config.path }}
+          path: ./target/release/core-cli
 
   release:
     if: github.ref == 'refs/heads/master'
+    needs: test
     runs-on: ubuntu-latest
-
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
+    - name: Get version from Cargo.toml
+      id: cargo-version
+      run: echo "::set-output name=VERSION::$(grep '^version =' Cargo.toml | sed -E 's/version = "(.*)"/\1/')"
+    - name: Create new tag
+      id: tag
+      run: |
+        git fetch --tags
+        TAG_EXISTS=$(git tag -l "v${{ steps.cargo-version.outputs.VERSION }}")
+        if [ -n "$TAG_EXISTS" ]; then
+          echo "Tag v${{ steps.cargo-version.outputs.VERSION }} already exists"
+          exit 1
+        fi
+        git tag v${{ steps.cargo-version.outputs.VERSION }}
+        git push origin v${{ steps.cargo-version.outputs.VERSION }}
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      with:
+        tag_name: v${{ steps.cargo-version.outputs.VERSION }}
+        release_name: Release v${{ steps.cargo-version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install targets
-        run: |
-          rustup target add x86_64-unknown-linux-gnu
-          rustup target add aarch64-unknown-linux-gnu
-          rustup target add x86_64-apple-darwin
-          rustup target add aarch64-apple-darwin
-          rustup target add x86_64-pc-windows-gnu
 
-      - name: Run linters
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-      - name: Run tests
-        run: cargo test --all-targets --all-features
-
-      - name: Build binaries
-        run: |
-          cargo build --release --target x86_64-unknown-linux-gnu
-          cargo build --release --target aarch64-unknown-linux-gnu
-          cargo build --release --target x86_64-apple-darwin
-          cargo build --release --target aarch64-apple-darwin
-          cargo build --release --target x86_64-pc-windows-gnu
-
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Linux x86_64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-unknown-linux-gnu/release/core-cli
-          asset_name: core-cli-x86_64-unknown-linux-gnu
-          asset_content_type: application/octet-stream
-
-      - name: Upload Linux aarch64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/aarch64-unknown-linux-gnu/release/core-cli
-          asset_name: core-cli-aarch64-unknown-linux-gnu
-          asset_content_type: application/octet-stream
-
-      - name: Upload macOS x86_64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-apple-darwin/release/core-cli
-          asset_name: core-cli-x86_64-apple-darwin
-          asset_content_type: application/octet-stream
-
-      - name: Upload macOS aarch64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/aarch64-apple-darwin/release/core-cli
-          asset_name: core-cli-aarch64-apple-darwin
-          asset_content_type: application/octet-stream
-
-      - name: Upload Windows x86_64 binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/x86_64-pc-windows-gnu/release/core-cli.exe
-          asset_name: core-cli-x86_64-pc-windows-gnu.exe
-          asset_content_type: application/octet-stream
+  artifacts:
+    needs: release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [
+          {path: linux-x86_64, file_ext: ""},
+          {path: windows-x86_64, file_ext: ".exe"},
+          {path: linux-arm64, file_ext: ""},
+          {path: darwin-x86_64, file_ext: ""},
+          {path: darwin-arm64, file_ext: ""},
+        ]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Artifact download
+      uses: actions/download-artifact@v4
+      with:
+        name: core-cli-${{ matrix.platform.path}}
+        path: ./core-cli-${{ matrix.platform.path }}
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.release.outputs.upload_url }}
+        asset_path: ./core-cli-${{ matrix.platform.path }}/core-cli${{matrix.platform.file_ext}}
+        asset_name: core-cli-${{ matrix.platform.path }}${{matrix.platform.file_ext}}
+        asset_content_type: application/octet-stream

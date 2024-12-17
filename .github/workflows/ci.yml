@@ -31,6 +31,16 @@ jobs:
           toolchain: stable
           profile: minimal
 
+      - name: Install OpenSSL and pkg-config (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config
+
+      - name: Set PKG_CONFIG_PATH (Linux ARM64 only)
+        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'aarch64'
+        run: echo "PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+
       - name: Install clippy
         run: rustup component add clippy --toolchain stable
 

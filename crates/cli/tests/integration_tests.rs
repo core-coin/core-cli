@@ -16,6 +16,7 @@ mod tests {
             let datadir = create_tmp_dir(None).to_path_buf();
             let mut cmd = Command::cargo_bin("core-cli").unwrap();
 
+            cmd.env("CARGO_TARGET_DIR", "target/release");
             cmd.arg(format!("-b={}", DEFAULT_BACKEND));
             cmd.arg(format!("-d={}", datadir.display()));
 

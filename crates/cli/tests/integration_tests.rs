@@ -19,10 +19,7 @@ mod tests {
             cmd.arg(format!("-b={}", DEFAULT_BACKEND));
             cmd.arg(format!("-d={}", datadir.display()));
 
-            TestContext {
-                datadir: datadir,
-                cmd: cmd,
-            }
+            TestContext { datadir, cmd }
         }
 
         fn run_with_input(&mut self, input: String) -> &mut Command {
@@ -36,7 +33,7 @@ mod tests {
 
         pub fn create_tempfile_with_input(&self, input: &[u8]) -> PathBuf {
             let mut tmpfile = std::fs::File::create(self.datadir().join("input.txt")).unwrap();
-            tmpfile.write(input).unwrap();
+            tmpfile.write_all(input).unwrap();
 
             self.datadir().join("input.txt")
         }

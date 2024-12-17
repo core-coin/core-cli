@@ -24,10 +24,7 @@ mod tests {
             let client = Arc::new(Mutex::new(mock));
             let module = XcbKeyModule::new(client, datadir.display().to_string(), accounts).await;
 
-            TestContext {
-                datadir: datadir,
-                module: module,
-            }
+            TestContext { datadir, module }
         }
     }
 
@@ -87,7 +84,7 @@ mod tests {
             if let Response::Keyfile(keyfile) = initial.clone() {
                 assert_eq!(accounts[0].address, keyfile.address); // check if the address is the same
                 assert_eq!(accounts[0].wallet, None); // check if the wallet is None (account is locked)
-                assert_eq!(accounts[0].is_unlocked(), false); // check if the account is locked
+                assert!(!accounts[0].is_unlocked()); // check if the account is locked
             }
 
             // check that we cannot inspect, sign or unlock the account with wrong password
@@ -158,7 +155,7 @@ mod tests {
                 .unwrap();
             if let Response::Accounts(accounts) = unlocked_list {
                 assert_eq!(accounts.len(), 1);
-                assert_eq!(accounts[0].is_unlocked(), true); // check if the account is unlocked
+                assert!(accounts[0].is_unlocked()); // check if the account is unlocked
                 assert_ne!(accounts[0].wallet, None); // check if the wallet is Some (account is unlocked)
             }
 
@@ -353,7 +350,6 @@ mod tests {
             .await;
 
         if let Err(CliError::InvalidPrivateKey) = response {
-            assert!(true)
         } else {
             panic!("Expected CliError::InvalidPrivateKey");
         }

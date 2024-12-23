@@ -73,24 +73,10 @@ main() {
       fi
     fi
 
+    binary_name="core-cli"
     case "$TARGET" in
-    linux-x86_64)
-      binary_name="core-cli-linux-x86_64"
-      ;;
-    linux-arm64)
-      binary_name="core-cli-linux-arm64"
-      ;;
-    darwin-x86_64)
-      binary_name="core-cli-darwin-x86_64"
-      ;;
-    darwin-arm64)
-      binary_name="core-cli-darwin-arm64"
-      ;;
     windows-x86_64)
-      binary_name="core-cli-windows-x86_64.exe"
-      ;;
-    *)
-      err "Unsupported target: $TARGET"
+      binary_name="core-cli.exe"
       ;;
     esac
 

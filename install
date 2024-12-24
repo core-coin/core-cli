@@ -1,4 +1,4 @@
-CORE_CLI_DOWNLOAD_ROOT=https://github.com/core-coin/core-cli/releases/download/
+CORE_CLI_DOWNLOAD_ROOT=https://github.com/core-coin/core-cli/releases/download
 #!/bin/sh
 # Copyright 2016 The Rust Project Developers. See the COPYRIGHT
 # file at the top-level directory of this distribution and at
@@ -52,6 +52,8 @@ main() {
     core_cli_dir="$HOME/.core-cli"
     ensure mkdir -p "$core_cli_dir"
 
+    # Check for CORE_CLI_RELEASE environment variable override.  Otherwise fetch
+    # the latest release tag from github
     release_file="$core_cli_dir/release"
     printf 'looking for latest release\n' 1>&2
     ensure downloader "$GH_LATEST_RELEASE" "$release_file"
@@ -63,14 +65,33 @@ main() {
       err 'Unable to figure latest release'
     fi
 
-    binary_name="core-cli"
     case "$TARGET" in
+    linux-x86_64)
+      gh_binary_name="core-cli-linux-x86_64"
+      ;;
+    linux-arm64)
+      gh_binary_name="core-cli-linux-arm64"
+      ;;
+    darwin-x86_64)
+      gh_binary_name="core-cli-darwin-x86_64"
+      ;;
+    darwin-arm64)
+      gh_binary_name="core-cli-darwin-arm64"
+      ;;
     windows-x86_64)
-      binary_name="core-cli.exe"
+      gh_binary_name="core-cli-windows-x86_64.exe"
+      ;;
+    *)
+      err "Unsupported target: $TARGET"
       ;;
     esac
 
-    download_url="$CORE_CLI_DOWNLOAD_ROOT/$release/$binary_name"
+    binary_name="core-cli"
+    if [ "$_ostype" = "windows" ]; then
+      binary_name="core-cli.exe"
+    fi
+
+    download_url="$CORE_CLI_DOWNLOAD_ROOT/$release/$gh_binary_name"
     core_cli_install_init="$core_cli_dir/$binary_name"
 
     printf 'downloading %s core-cli\n' "$release" 1>&2
@@ -83,7 +104,6 @@ main() {
     linux|darwin)
       if ! grep -q "$core_cli_dir" "$HOME/.profile"; then
         echo "export PATH=\$PATH:$core_cli_dir" >> "$HOME/.profile"
-        export PATH=$PATH:$core_cli_dir
       fi
       ;;
     windows)
@@ -92,8 +112,6 @@ main() {
       fi
       ;;
     esac
-
-    return "$retval"
 }
 
 err() {

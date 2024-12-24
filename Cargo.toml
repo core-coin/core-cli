@@ -24,7 +24,7 @@ keywords = ["core blockchain", "xcb", "cli"]
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/core-coin/core-cli"
 repository = "https://github.com/core-coin/core-cli"
-version = "0.0.2"
+version = "0.0.3"
 
 [workspace.dependencies]
 # Workspace members

@@ -75,7 +75,7 @@ main() {
     darwin-x86_64)
       gh_binary_name="core-cli-darwin-x86_64"
       ;;
-    darwin-aarch64)
+    darwin-arm64)
       gh_binary_name="core-cli-darwin-arm64"
       ;;
     windows-x86_64)

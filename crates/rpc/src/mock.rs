@@ -9,6 +9,7 @@ pub struct MockRpcClient {
     pub block_latest: Block,
     pub energy_price: u128,
     pub network_id: u64,
+    pub syncing: atoms_rpc_types::SyncStatus,
 }
 
 impl MockRpcClient {
@@ -20,6 +21,7 @@ impl MockRpcClient {
             block_latest: Block::default(),
             energy_price: 0,
             network_id: 0,
+            syncing: atoms_rpc_types::SyncStatus::None,
         }
     }
 
@@ -50,6 +52,11 @@ impl MockRpcClient {
 
     pub fn with_network_id(mut self, network_id: u64) -> Self {
         self.network_id = network_id;
+        self
+    }
+
+    pub fn with_syncing(mut self, syncing: atoms_rpc_types::SyncStatus) -> Self {
+        self.syncing = syncing;
         self
     }
 }
@@ -84,5 +91,9 @@ impl RpcClient for MockRpcClient {
 
     async fn get_network_id(&self) -> Result<u64, CliError> {
         Ok(self.network_id)
+    }
+
+    async fn syncing(&self) -> Result<atoms_rpc_types::SyncStatus, CliError> {
+        Ok(self.syncing)
     }
 }

@@ -2,6 +2,7 @@
 
 #[cfg(test)]
 mod tests {
+    use atoms_rpc_types::SyncStatus;
     use cli_error::CliError;
     use rpc::{GoCoreClient, RpcClient};
     use types::DEFAULT_BACKEND;
@@ -91,5 +92,13 @@ mod tests {
 
         let response = go_core_client.get_block_by_number(999999999).await;
         assert!(matches!(response, Err(CliError::RpcError(_))));
+    }
+
+    #[tokio::test]
+    async fn test_syncing() {
+        let go_core_client = gocore_client().await;
+
+        let response = go_core_client.syncing().await.unwrap();
+        assert_eq!(response, SyncStatus::None);
     }
 }

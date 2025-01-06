@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use atoms_rpc_types::Block;
+use atoms_rpc_types::{Block, SyncStatus};
 use cli_error::CliError;
 
 pub mod go_core;
@@ -17,4 +17,6 @@ pub trait RpcClient {
 
     async fn get_energy_price(&self) -> Result<u128, CliError>;
     async fn get_network_id(&self) -> Result<u64, CliError>;
+
+    async fn syncing(&self) -> Result<SyncStatus, CliError>;
 }

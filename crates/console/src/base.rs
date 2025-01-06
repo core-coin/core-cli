@@ -22,6 +22,7 @@ fn list() {
     println!("  'get_block(<hash>|<number>|'latest')' - get block information by hash or number. Use 'latest' to get the latest block");
     println!("  'get_energy_price()' - get the current energy price to allow a timely execution of a transaction");
     println!("  'get_network_id()' - get the nework ID of the current network");
+    println!("  'syncing()' - get the syncing status of the node");
 
     println!("'xcbkey' - XCB Key module commands:");
     println!("  'list()' - list all accounts");

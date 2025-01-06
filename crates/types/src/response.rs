@@ -2,7 +2,9 @@ use atoms_rpc_types::Block;
 use serde::Serialize;
 
 use crate::{account::KeyFile, Account};
+use atoms_rpc_types::SyncStatus;
 use std::str::FromStr;
+
 /// ResponseView decided if response of call will be returned as a string, json object or human readable format
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum ResponseView {
@@ -38,6 +40,7 @@ pub enum Response {
 
     Block(Block),
     Struct(serde_json::Value), // Use serde_json::Value for custom structs
+    SyncStatus(SyncStatus),
 
     Accounts(Vec<Account>),
     Keyfile(KeyFile),
@@ -71,6 +74,14 @@ impl std::fmt::Display for Response {
                 }
                 Ok(())
             }
+            Response::SyncStatus(sync_info) => {
+                if let SyncStatus::Info(sync_info) = sync_info {
+                    write!(f, "RPC node is syncing now. Current block: {}, highest block: {}, starting block: {}", sync_info.current_block, sync_info.highest_block, sync_info.starting_block)
+                } else {
+                    write!(f, "RPC node is synced and data is up to date")
+                }
+            }
+
             Response::Keyfile(keyfile) => write!(f, "{}", keyfile),
         }
     }
@@ -96,6 +107,7 @@ impl Response {
             Response::Struct(val) => format!("Struct value: {:#?}", val),
             Response::Accounts(_) => self.to_string(),
             Response::Keyfile(_) => self.to_string(),
+            Response::SyncStatus(_) => self.to_string(),
         }
     }
 }

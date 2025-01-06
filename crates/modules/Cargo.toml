@@ -31,3 +31,6 @@ atoms-rpc-types.workspace = true
 xcb-keystore.workspace = true
 
 rpassword = "5.0"
+
+[dev-dependencies]
+base-primitives.workspace = true

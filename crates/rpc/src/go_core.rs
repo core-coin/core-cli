@@ -2,7 +2,7 @@ use crate::RpcClient;
 use async_trait::async_trait;
 use atoms_provider::{network::Ethereum, Provider, RootProvider};
 use atoms_rpc_client::RpcClient as AtomsRpcClient;
-use atoms_rpc_types::{Block, BlockId, BlockNumberOrTag, RpcBlockHash};
+use atoms_rpc_types::{Block, BlockId, BlockNumberOrTag, RpcBlockHash, SyncStatus};
 use atoms_transport_http::{Client, Http};
 use base_primitives::{hex::FromHex, FixedBytes};
 use cli_error::CliError;
@@ -86,6 +86,15 @@ impl RpcClient for GoCoreClient {
         let response = self
             .provider
             .get_chain_id()
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        Ok(response)
+    }
+
+    async fn syncing(&self) -> Result<SyncStatus, CliError> {
+        let response = self
+            .provider
+            .syncing()
             .await
             .map_err(|e| CliError::RpcError(e.to_string()))?;
         Ok(response)

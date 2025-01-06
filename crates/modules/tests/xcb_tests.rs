@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use atoms_rpc_types::Block;
+    use atoms_rpc_types::{Block, SyncInfo};
+    use base_primitives::U256;
     use cli_error::CliError;
     use modules::{Module, XcbModule};
     use rpc::MockRpcClient;
@@ -20,6 +21,11 @@ mod tests {
             .with_energy_price(1000)
             .with_network_id(999);
         let client = Arc::new(Mutex::new(mock));
+        XcbModule::new(client)
+    }
+
+    fn get_module_with_rpc_client(client: MockRpcClient) -> XcbModule {
+        let client = Arc::new(Mutex::new(client));
         XcbModule::new(client)
     }
 
@@ -138,5 +144,50 @@ mod tests {
             response,
             Err(CliError::InvalidNumberOfArguments(_))
         ));
+    }
+
+    #[tokio::test]
+    async fn test_syncing() {
+        let mut module = get_module();
+        let response = module.execute("syncing".to_string(), vec![]).await.unwrap();
+        assert_eq!(
+            response,
+            Response::SyncStatus(atoms_rpc_types::SyncStatus::None)
+        );
+
+        assert_eq!(
+            response.format(types::ResponseView::Human),
+            "RPC node is synced and data is up to date"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_syncing_active() {
+        let mut module = get_module_with_rpc_client(MockRpcClient::new().with_syncing(
+            atoms_rpc_types::SyncStatus::Info(SyncInfo {
+                starting_block: U256::from(0),
+                current_block: U256::from(100),
+                highest_block: U256::from(1000),
+                warp_chunks_amount: None,
+                warp_chunks_processed: None,
+            }),
+        ));
+
+        let response = module.execute("syncing".to_string(), vec![]).await.unwrap();
+        assert_eq!(
+            response,
+            Response::SyncStatus(atoms_rpc_types::SyncStatus::Info(SyncInfo {
+                starting_block: U256::from(0),
+                current_block: U256::from(100),
+                highest_block: U256::from(1000),
+                warp_chunks_amount: None,
+                warp_chunks_processed: None,
+            }))
+        );
+
+        assert_eq!(
+            response.format(types::ResponseView::Human),
+            "RPC node is syncing now. Current block: 100, highest block: 1000, starting block: 0"
+        );
     }
 }

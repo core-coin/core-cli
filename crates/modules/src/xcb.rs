@@ -86,6 +86,14 @@ impl XcbModule {
             Err(e) => Err(e),
         }
     }
+
+    async fn syncing(&self) -> Result<Response, CliError> {
+        let syncing = self.client().await.lock().await.syncing().await;
+        match syncing {
+            Ok(syncing) => Ok(Response::SyncStatus(syncing)),
+            Err(e) => Err(e),
+        }
+    }
 }
 
 #[async_trait::async_trait]
@@ -96,6 +104,7 @@ impl Module for XcbModule {
             "get_block" => self.block(args).await,
             "get_energy_price" => self.get_energy_price().await,
             "get_network_id" => self.get_network_id().await,
+            "syncing" => self.syncing().await,
             _ => Err(CliError::UnknownCommand),
         }
     }

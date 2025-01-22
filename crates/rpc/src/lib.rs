@@ -8,7 +8,6 @@ pub use go_core::GoCoreClient;
 
 pub mod mock;
 pub use mock::MockRpcClient;
-use types::account;
 
 #[async_trait]
 pub trait RpcClient {

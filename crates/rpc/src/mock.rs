@@ -1,6 +1,7 @@
 use crate::{CliError, RpcClient};
 use async_trait::async_trait;
 use atoms_rpc_types::Block;
+use base_primitives::U256;
 
 pub struct MockRpcClient {
     pub block_height: u64,
@@ -95,5 +96,25 @@ impl RpcClient for MockRpcClient {
 
     async fn syncing(&self) -> Result<atoms_rpc_types::SyncStatus, CliError> {
         Ok(self.syncing)
+    }
+
+    async fn get_balance(&self, _account: String, _block: Option<u64>) -> Result<U256, CliError> {
+        Ok(U256::from(0))
+    }
+
+    async fn get_tx_count(&self, _account: String, _block: Option<u64>) -> Result<u64, CliError> {
+        Ok(0)
+    }
+
+    async fn get_code(&self, _account: String, _block: Option<u64>) -> Result<String, CliError> {
+        Ok("".to_string())
+    }
+
+    async fn send_raw_transaction(&self, _tx: String) -> Result<String, CliError> {
+        Ok("".to_string())
+    }
+
+    async fn get_storage_at(&self, _account: String, _key: u128, _block: Option<u64>) -> Result<String, CliError> {
+        Ok("".to_string())
     }
 }

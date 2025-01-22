@@ -19,10 +19,15 @@ fn list() {
 
     println!("'xcb' - XCB module commands:");
     println!("  'get_block_height()' - get the current block height");
-    println!("  'get_block(<hash>|<number>|'latest')' - get block information by hash or number. Use 'latest' to get the latest block");
     println!("  'get_energy_price()' - get the current energy price to allow a timely execution of a transaction");
     println!("  'get_network_id()' - get the nework ID of the current network");
     println!("  'syncing()' - get the syncing status of the node");
+    println!("  'get_block(<hash>|<number>|'latest')' - get block information by hash or number. Use 'latest' to get the latest block");
+    println!("  'get_balance(<address>, <block> | 'latest')' - get the balance of an account at a specific block. Use 'latest' to get the latest balance");
+    println!("  'get_tx_count(<address>, <block> | 'latest')' - get the transaction count of an account at a specific block. Use 'latest' to get the latest transaction count");
+    println!("  'get_code(<address>, <block> | 'latest')' - get the code of an account at a specific block. Use 'latest' to get the latest code");
+    println!("  'get_storage_at(<address>, <key>, <block> | 'latest')' - get the storage at a specific key of an account at a specific block. Use 'latest' to get the latest storage");
+    println!("  'send_raw_transaction(<transaction>)' - send a raw transaction to the network");
 
     println!("'xcbkey' - XCB Key module commands:");
     println!("  'list()' - list all accounts");

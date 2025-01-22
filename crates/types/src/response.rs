@@ -3,6 +3,7 @@ use serde::Serialize;
 
 use crate::{account::KeyFile, Account};
 use atoms_rpc_types::SyncStatus;
+use base_primitives::U256;
 use std::str::FromStr;
 
 /// ResponseView decided if response of call will be returned as a string, json object or human readable format
@@ -34,6 +35,7 @@ impl FromStr for ResponseView {
 pub enum Response {
     U64(u64),
     U128(u128),
+    U256(U256),
 
     Bool(bool),
     String(String),
@@ -51,6 +53,7 @@ impl std::fmt::Display for Response {
         match self {
             Response::U64(val) => write!(f, "{}", val),
             Response::U128(val) => write!(f, "{}", val),
+            Response::U256(val) => write!(f, "{}", val),
             Response::Bool(val) => write!(f, "{}", val),
             Response::String(val) => write!(f, "{}", val),
             Response::Block(val) => write!(
@@ -101,6 +104,7 @@ impl Response {
         match self {
             Response::U64(val) => format!("u64 value: {:#?}", val),
             Response::U128(val) => format!("U128 value: {:#?}", val),
+            Response::U256(val) => format!("U256 value: {:#?}", val),
             Response::Bool(val) => format!("Boolean value: {:#?}", val),
             Response::String(val) => format!("String value: {:#?}", val),
             Response::Block(val) => format!("{:#?}", val),

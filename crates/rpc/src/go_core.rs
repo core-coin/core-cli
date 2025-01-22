@@ -4,7 +4,7 @@ use atoms_provider::{network::Ethereum, Provider, RootProvider};
 use atoms_rpc_client::RpcClient as AtomsRpcClient;
 use atoms_rpc_types::{Block, BlockId, BlockNumberOrTag, RpcBlockHash, SyncStatus};
 use atoms_transport_http::{Client, Http};
-use base_primitives::{hex::FromHex, FixedBytes};
+use base_primitives::{hex::FromHex, FixedBytes, IcanAddress, U256};
 use cli_error::CliError;
 
 pub struct GoCoreClient {
@@ -98,5 +98,83 @@ impl RpcClient for GoCoreClient {
             .await
             .map_err(|e| CliError::RpcError(e.to_string()))?;
         Ok(response)
+    }
+
+    async fn get_balance(&self, account: String, block: Option<u64>) -> Result<U256, CliError> {
+        let id = if let Some(number) = block {
+            BlockId::Number(BlockNumberOrTag::Number(number))
+        } else {
+            BlockId::Number(BlockNumberOrTag::Latest)
+        };
+        let hex = IcanAddress::from_hex(account)
+            .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
+        let response = self
+            .provider
+            .get_balance(hex, id)
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        Ok(response)
+    }
+
+    async fn get_tx_count(&self, account: String, block: Option<u64>) -> Result<u64, CliError> {
+        let id = if let Some(number) = block {
+            BlockId::Number(BlockNumberOrTag::Number(number))
+        } else {
+            BlockId::Number(BlockNumberOrTag::Latest)
+        };
+        let hex = IcanAddress::from_hex(account)
+            .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
+        let response = self
+            .provider
+            .get_transaction_count(hex, id)
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        Ok(response)
+    }
+
+    async fn get_code(&self, account: String, block: Option<u64>) -> Result<String, CliError> {
+        let id = if let Some(number) = block {
+            BlockId::Number(BlockNumberOrTag::Number(number))
+        } else {
+            BlockId::Number(BlockNumberOrTag::Latest)
+        };
+        let hex = IcanAddress::from_hex(account)
+            .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
+        let response = self
+            .provider
+            .get_code_at(hex, id)
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        Ok(response.to_string())
+    }
+
+    async fn send_raw_transaction(&self, tx: String) -> Result<String, CliError> {
+        let response = self
+            .provider
+            .send_raw_transaction(tx.as_bytes())
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        Ok(response.tx_hash().to_string())
+    }
+
+    async fn get_storage_at(
+        &self,
+        address: String,
+        key: u128,
+        block: Option<u64>,
+    ) -> Result<String, CliError> {
+        let id = if let Some(number) = block {
+            BlockId::Number(BlockNumberOrTag::Number(number))
+        } else {
+            BlockId::Number(BlockNumberOrTag::Latest)
+        };
+        let hex = IcanAddress::from_hex(address)
+            .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
+        let response = self
+            .provider
+            .get_storage_at(hex, U256::from(key), id)
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        Ok(response.to_string())
     }
 }

@@ -18,3 +18,4 @@ hex.workspace = true
 
 atoms-rpc-types.workspace = true
 atoms-signer-wallet.workspace = true
+base-primitives.workspace = true

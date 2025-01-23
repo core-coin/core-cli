@@ -102,8 +102,21 @@ main() {
     # Add the .core-cli directory to the PATH
     case "$_ostype" in
     linux|darwin)
-      if ! grep -q "$core_cli_dir" "$HOME/.profile"; then
+      profile_files=("$HOME/.profile" "$HOME/.bash_profile" "$HOME/.zshrc")
+      profile_file_found=false
+      for profile_file in "${profile_files[@]}"; do
+        if [ -f "$profile_file" ]; then
+          profile_file_found=true
+          if ! grep -q "$core_cli_dir" "$profile_file"; then
+            echo "export PATH=\$PATH:$core_cli_dir" >> "$profile_file"
+            export PATH=$PATH:$core_cli_dir
+          fi
+        fi
+      done
+      if [ "$profile_file_found" = false ]; then
+        touch "$HOME/.profile"
         echo "export PATH=\$PATH:$core_cli_dir" >> "$HOME/.profile"
+        export PATH=$PATH:$core_cli_dir
       fi
       ;;
     windows)

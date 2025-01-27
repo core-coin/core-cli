@@ -2,7 +2,7 @@ use crate::RpcClient;
 use async_trait::async_trait;
 use atoms_provider::{network::Ethereum, Provider, RootProvider};
 use atoms_rpc_client::RpcClient as AtomsRpcClient;
-use atoms_rpc_types::{Block, BlockId, BlockNumberOrTag, RpcBlockHash, SyncStatus};
+use atoms_rpc_types::{Block, BlockId, SyncStatus, Transaction, TransactionReceipt};
 use atoms_transport_http::{Client, Http};
 use base_primitives::{hex::FromHex, FixedBytes, IcanAddress, U256};
 use cli_error::CliError;
@@ -32,39 +32,10 @@ impl RpcClient for GoCoreClient {
         Ok(response)
     }
 
-    async fn get_block_by_hash(&self, hash: String) -> Result<Block, CliError> {
-        let fixed_bytes =
-            FixedBytes::from_hex(hash).map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
-        let block_id = BlockId::Hash(RpcBlockHash::from_hash(fixed_bytes, Some(true)));
+    async fn get_block(&self, block: BlockId) -> Result<Block, CliError> {
         let response = self
             .provider
-            .get_block(block_id, true)
-            .await
-            .map_err(|e| CliError::RpcError(e.to_string()))?;
-        match response {
-            Some(block) => Ok(block),
-            None => Err(CliError::RpcError("Block not found".to_string())),
-        }
-    }
-
-    async fn get_block_by_number(&self, number: u64) -> Result<Block, CliError> {
-        let block_id = BlockId::Number(BlockNumberOrTag::Number(number));
-        let response = self
-            .provider
-            .get_block(block_id, true)
-            .await
-            .map_err(|e| CliError::RpcError(e.to_string()))?;
-        match response {
-            Some(block) => Ok(block),
-            None => Err(CliError::RpcError("Block not found".to_string())),
-        }
-    }
-
-    async fn get_block_latest(&self) -> Result<Block, CliError> {
-        let block_id = BlockId::Number(BlockNumberOrTag::Latest);
-        let response = self
-            .provider
-            .get_block(block_id, true)
+            .get_block(block, true)
             .await
             .map_err(|e| CliError::RpcError(e.to_string()))?;
         match response {
@@ -100,49 +71,34 @@ impl RpcClient for GoCoreClient {
         Ok(response)
     }
 
-    async fn get_balance(&self, account: String, block: Option<u64>) -> Result<U256, CliError> {
-        let id = if let Some(number) = block {
-            BlockId::Number(BlockNumberOrTag::Number(number))
-        } else {
-            BlockId::Number(BlockNumberOrTag::Latest)
-        };
+    async fn get_balance(&self, account: String, block: BlockId) -> Result<U256, CliError> {
         let hex = IcanAddress::from_hex(account)
             .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
         let response = self
             .provider
-            .get_balance(hex, id)
+            .get_balance(hex, block)
             .await
             .map_err(|e| CliError::RpcError(e.to_string()))?;
         Ok(response)
     }
 
-    async fn get_tx_count(&self, account: String, block: Option<u64>) -> Result<u64, CliError> {
-        let id = if let Some(number) = block {
-            BlockId::Number(BlockNumberOrTag::Number(number))
-        } else {
-            BlockId::Number(BlockNumberOrTag::Latest)
-        };
+    async fn get_tx_count(&self, account: String, block: BlockId) -> Result<u64, CliError> {
         let hex = IcanAddress::from_hex(account)
             .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
         let response = self
             .provider
-            .get_transaction_count(hex, id)
+            .get_transaction_count(hex, block)
             .await
             .map_err(|e| CliError::RpcError(e.to_string()))?;
         Ok(response)
     }
 
-    async fn get_code(&self, account: String, block: Option<u64>) -> Result<String, CliError> {
-        let id = if let Some(number) = block {
-            BlockId::Number(BlockNumberOrTag::Number(number))
-        } else {
-            BlockId::Number(BlockNumberOrTag::Latest)
-        };
+    async fn get_code(&self, account: String, block: BlockId) -> Result<String, CliError> {
         let hex = IcanAddress::from_hex(account)
             .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
         let response = self
             .provider
-            .get_code_at(hex, id)
+            .get_code_at(hex, block)
             .await
             .map_err(|e| CliError::RpcError(e.to_string()))?;
         Ok(response.to_string())
@@ -161,20 +117,74 @@ impl RpcClient for GoCoreClient {
         &self,
         address: String,
         key: u128,
-        block: Option<u64>,
+        block: BlockId,
     ) -> Result<String, CliError> {
-        let id = if let Some(number) = block {
-            BlockId::Number(BlockNumberOrTag::Number(number))
-        } else {
-            BlockId::Number(BlockNumberOrTag::Latest)
-        };
         let hex = IcanAddress::from_hex(address)
             .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
         let response = self
             .provider
-            .get_storage_at(hex, U256::from(key), id)
+            .get_storage_at(hex, U256::from(key), block)
             .await
             .map_err(|e| CliError::RpcError(e.to_string()))?;
         Ok(response.to_string())
+    }
+
+    async fn get_transaction_count(
+        &self,
+        account: String,
+        block: BlockId,
+    ) -> Result<u64, CliError> {
+        let hex = IcanAddress::from_hex(account)
+            .map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
+        let response = self
+            .provider
+            .get_transaction_count(hex, block)
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        Ok(response)
+    }
+
+    async fn get_transaction_by_hash(&self, hash: String) -> Result<Transaction, CliError> {
+        let fixed_bytes =
+            FixedBytes::from_hex(hash).map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
+        let response = self
+            .provider
+            .get_transaction_by_hash(fixed_bytes)
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        if let Some(tx) = response {
+            Ok(tx)
+        } else {
+            Err(CliError::RpcError("Transaction not found".to_string()))
+        }
+    }
+
+    async fn get_transaction_receipt(&self, hash: String) -> Result<TransactionReceipt, CliError> {
+        let b256_hash =
+            FixedBytes::from_hex(hash).map_err(|e| CliError::InvalidHexArgument(e.to_string()))?;
+        let response = self
+            .provider
+            .get_transaction_receipt(b256_hash)
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        if let Some(receipt) = response {
+            Ok(receipt)
+        } else {
+            Err(CliError::RpcError(
+                "Transaction receipt not found".to_string(),
+            ))
+        }
+    }
+
+    async fn get_uncle(&self, block: BlockId, index: u64) -> Result<Block, CliError> {
+        let response = self
+            .provider
+            .get_uncle(block, index)
+            .await
+            .map_err(|e| CliError::RpcError(e.to_string()))?;
+        match response {
+            Some(block) => Ok(block),
+            None => Err(CliError::RpcError("Uncle not found".to_string())),
+        }
     }
 }

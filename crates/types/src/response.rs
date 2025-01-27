@@ -1,4 +1,4 @@
-use atoms_rpc_types::Block;
+use atoms_rpc_types::{Block, Transaction, TransactionReceipt};
 use serde::Serialize;
 
 use crate::{account::KeyFile, Account};
@@ -41,8 +41,10 @@ pub enum Response {
     String(String),
 
     Block(Block),
-    Struct(serde_json::Value), // Use serde_json::Value for custom structs
+    Transaction(Transaction),
+    Receipt(Box<TransactionReceipt>),
     SyncStatus(SyncStatus),
+    Struct(serde_json::Value), // Use serde_json::Value for custom structs
 
     Accounts(Vec<Account>),
     Keyfile(KeyFile),
@@ -57,6 +59,18 @@ impl std::fmt::Display for Response {
             Response::Bool(val) => write!(f, "{}", val),
             Response::String(val) => write!(f, "{}", val),
             Response::Block(val) => write!(
+                f,
+                "{}",
+                serde_json::to_string(val)
+                    .unwrap_or_else(|_| "Failed to serialize to JSON".to_string())
+            ),
+            Response::Transaction(val) => write!(
+                f,
+                "{}",
+                serde_json::to_string(val)
+                    .unwrap_or_else(|_| "Failed to serialize to JSON".to_string())
+            ),
+            Response::Receipt(val) => write!(
                 f,
                 "{}",
                 serde_json::to_string(val)
@@ -108,6 +122,8 @@ impl Response {
             Response::Bool(val) => format!("Boolean value: {:#?}", val),
             Response::String(val) => format!("String value: {:#?}", val),
             Response::Block(val) => format!("{:#?}", val),
+            Response::Transaction(val) => format!("{:#?}", val),
+            Response::Receipt(val) => format!("{:#?}", val),
             Response::Struct(val) => format!("Struct value: {:#?}", val),
             Response::Accounts(_) => self.to_string(),
             Response::Keyfile(_) => self.to_string(),

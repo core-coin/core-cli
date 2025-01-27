@@ -27,10 +27,7 @@ utils.workspace = true
 atoms-signer-wallet.workspace = true
 atoms-signer.workspace = true
 atoms-rpc-types.workspace = true
-
+base-primitives.workspace = true
 xcb-keystore.workspace = true
 
 rpassword = "5.0"
-
-[dev-dependencies]
-base-primitives.workspace = true

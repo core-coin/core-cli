@@ -1,7 +1,9 @@
+use std::str::FromStr;
+
 use crate::{CliError, RpcClient};
 use async_trait::async_trait;
-use atoms_rpc_types::Block;
-use base_primitives::U256;
+use atoms_rpc_types::{Block, BlockId};
+use base_primitives::{IcanAddress, B256, U256};
 
 pub struct MockRpcClient {
     pub block_height: u64,
@@ -74,15 +76,7 @@ impl RpcClient for MockRpcClient {
         Ok(self.block_height)
     }
 
-    async fn get_block_by_hash(&self, _hash: String) -> Result<Block, CliError> {
-        Ok(self.block_by_hash.clone())
-    }
-
-    async fn get_block_by_number(&self, _number: u64) -> Result<Block, CliError> {
-        Ok(self.block_by_number.clone())
-    }
-
-    async fn get_block_latest(&self) -> Result<Block, CliError> {
+    async fn get_block(&self, _block: BlockId) -> Result<Block, CliError> {
         Ok(self.block_latest.clone())
     }
 
@@ -98,15 +92,15 @@ impl RpcClient for MockRpcClient {
         Ok(self.syncing)
     }
 
-    async fn get_balance(&self, _account: String, _block: Option<u64>) -> Result<U256, CliError> {
+    async fn get_balance(&self, _account: String, _block: BlockId) -> Result<U256, CliError> {
         Ok(U256::from(0))
     }
 
-    async fn get_tx_count(&self, _account: String, _block: Option<u64>) -> Result<u64, CliError> {
+    async fn get_tx_count(&self, _account: String, _block: BlockId) -> Result<u64, CliError> {
         Ok(0)
     }
 
-    async fn get_code(&self, _account: String, _block: Option<u64>) -> Result<String, CliError> {
+    async fn get_code(&self, _account: String, _block: BlockId) -> Result<String, CliError> {
         Ok("".to_string())
     }
 
@@ -114,7 +108,51 @@ impl RpcClient for MockRpcClient {
         Ok("".to_string())
     }
 
-    async fn get_storage_at(&self, _account: String, _key: u128, _block: Option<u64>) -> Result<String, CliError> {
+    async fn get_storage_at(
+        &self,
+        _account: String,
+        _key: u128,
+        _block: BlockId,
+    ) -> Result<String, CliError> {
         Ok("".to_string())
+    }
+
+    async fn get_transaction_count(
+        &self,
+        _account: String,
+        _block: BlockId,
+    ) -> Result<u64, CliError> {
+        Ok(0)
+    }
+
+    async fn get_transaction_by_hash(
+        &self,
+        _hash: String,
+    ) -> Result<atoms_rpc_types::Transaction, CliError> {
+        Ok(atoms_rpc_types::Transaction::default())
+    }
+
+    async fn get_transaction_receipt(
+        &self,
+        hash: String,
+    ) -> Result<atoms_rpc_types::TransactionReceipt, CliError> {
+        Ok(atoms_rpc_types::TransactionReceipt {
+            transaction_hash: B256::from_str(&hash).unwrap(),
+            transaction_index: Some(0),
+            block_hash: Some(B256::from_str("0x0").unwrap()),
+            block_number: Some(0),
+            energy_used: 0,
+            contract_address: None,
+            inner: Default::default(),
+            blob_gas_price: Some(0),
+            blob_gas_used: Some(0),
+            from: IcanAddress::default(),
+            to: None,
+            state_root: None,
+        })
+    }
+
+    async fn get_uncle(&self, _block: BlockId, _index: u64) -> Result<Block, CliError> {
+        Ok(Block::default())
     }
 }

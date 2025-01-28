@@ -27,7 +27,7 @@ If you don’t need to build from source, you can skip this step and directly in
 Install the Core CLI by running this command in your terminal:
 
 ```bash
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/core-coin/core-cli/refs/heads/master/install)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/core-coin/core-cli/refs/heads/master/install)"
 ```
 
 ### What this does

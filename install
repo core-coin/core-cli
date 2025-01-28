@@ -125,6 +125,7 @@ main() {
       fi
       ;;
     esac
+    reset && exec $SHELL
 }
 
 err() {

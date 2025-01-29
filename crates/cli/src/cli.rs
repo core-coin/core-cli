@@ -28,7 +28,6 @@ impl Cli {
             None => {
                 let mut default_path = home_dir().expect("Could not determine home directory");
                 default_path.push(".core-cli/data");
-                println!("Using default datadir: {:?}", default_path);
                 default_path
             }
         }

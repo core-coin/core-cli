@@ -21,7 +21,7 @@ use crate::Module;
 const ACCOUNT_SUBDIR: &str = "keystore";
 
 pub struct XcbKeyModule {
-    accounts_dir: String,
+    accounts_dir: PathBuf,
     network_id: u64,
     accounts: Accounts,
 }
@@ -29,11 +29,11 @@ pub struct XcbKeyModule {
 impl XcbKeyModule {
     pub async fn new(
         client: Arc<Mutex<dyn RpcClient + Send>>,
-        datadir: String,
+        datadir: PathBuf,
         accounts: Accounts,
     ) -> Self {
         let network_id = client.lock().await.get_network_id().await.unwrap();
-        let accounts_dir = format!("{}/{}", datadir, ACCOUNT_SUBDIR);
+        let accounts_dir = datadir.join(ACCOUNT_SUBDIR);
 
         // Create data directory if it does not exist
         if !PathBuf::from(&accounts_dir).exists() {
@@ -272,7 +272,7 @@ impl XcbKeyModule {
         let account = Account {
             address: key.address().to_string(),
             wallet: Some(key.clone()),
-            path: PathBuf::from(self.accounts_dir.clone() + "/" + &id),
+            path: self.accounts_dir.join(id),
             unlocked: 0,
         };
         self.accounts.add_account(account);

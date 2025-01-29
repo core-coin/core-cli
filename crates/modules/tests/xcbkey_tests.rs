@@ -22,7 +22,7 @@ mod tests {
             // create a tmp directory for the keystore
             let accounts = Accounts::new(vec![]);
             let client = Arc::new(Mutex::new(mock));
-            let module = XcbKeyModule::new(client, datadir.display().to_string(), accounts).await;
+            let module = XcbKeyModule::new(client, datadir.clone(), accounts).await;
 
             TestContext { datadir, module }
         }

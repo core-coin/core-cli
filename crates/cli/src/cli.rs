@@ -14,6 +14,6 @@ pub struct Cli {
     )]
     pub backend: String,
 
-    #[structopt(long, short, default_value = "./data")]
+    #[structopt(long, short, default_value = "~/.core-cli/data")]
     pub datadir: String,
 }

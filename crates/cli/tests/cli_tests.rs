@@ -1,6 +1,9 @@
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use cli::Cli;
+    use dirs::home_dir;
     use structopt::StructOpt;
     use types::DEFAULT_BACKEND;
 
@@ -11,7 +14,10 @@ mod tests {
 
         assert_eq!(cli.client, "go-core");
         assert_eq!(cli.backend, DEFAULT_BACKEND);
-        assert_eq!(cli.datadir, "./data");
+        assert_eq!(
+            cli.get_datadir(),
+            home_dir().unwrap().join(".core-cli/data")
+        );
     }
 
     #[test]
@@ -29,7 +35,7 @@ mod tests {
 
         assert_eq!(cli.client, "custom-client");
         assert_eq!(cli.backend, "some-backend");
-        assert_eq!(cli.datadir, "some-datadir");
+        assert_eq!(cli.get_datadir(), Path::new("some-datadir"));
     }
 
     #[test]
@@ -47,6 +53,6 @@ mod tests {
 
         assert_eq!(cli.client, "custom-client");
         assert_eq!(cli.backend, "some-backend");
-        assert_eq!(cli.datadir, "some-datadir");
+        assert_eq!(cli.get_datadir(), Path::new("some-datadir"));
     }
 }
